@@ -35,7 +35,8 @@
             <label for="content">Content</label>
             <textarea id="content" v-model="content" required></textarea>
           </div>
-          <button type="submit" class="add-button">Add To-Do</button>
+          <button type="submit" class="add-button">{{ addEditTodoButtonText }}</button>
+          <button v-if="visible" @click="resetEdit()" class="cancel-edit-button">Stop Edit Todo</button>
         </form>
       </section>
       <section class="note-list">
@@ -98,6 +99,9 @@ const thumbnail = ref(null);
 const content = ref("");
 const todos = ref([]);
 const userStore = useUserStore();
+var currentEditedTodoId = null
+var addEditTodoButtonText = "Add To-Do"
+var visible = false
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
@@ -108,9 +112,20 @@ const handleFileUpload = (event) => {
   reader.readAsDataURL(file);
 };
 
+const resetEdit = () => {
+  title.value = "";
+  description.value = "";
+  priority.value = "low";
+  thumbnail.value = null;
+  content.value = "";
+  currentEditedTodoId = null
+  addEditTodoButtonText = "Add To-Do"
+  visible = false
+}
+
 const addTodo = () => {
   const newTodo = {
-    id: Date.now().toString(),
+    id: currentEditedTodoId != null ? currentEditedTodoId : Date.now().toString(),
     user_id: userStore.user.id,
     title: title.value,
     description: description.value,
@@ -118,13 +133,14 @@ const addTodo = () => {
     thumbnail: thumbnail.value,
     content: content.value,
   };
-  userStore.addTodo(newTodo);
-  todos.value.push(newTodo);
-  title.value = "";
-  description.value = "";
-  priority.value = "low";
-  thumbnail.value = null;
-  content.value = "";
+  if (currentEditedTodoId != null){
+    userStore.editTodo(newTodo);
+  }
+  else {
+      userStore.addTodo(newTodo);
+      todos.value.push(newTodo);
+  }
+  resetEdit()
 };
 
 const fetchTodos = () => {
@@ -138,11 +154,14 @@ const deleteTodo = (id) => {
 };
 
 const editTodo = (todo) => {
+    addEditTodoButtonText = "Edit Todo"
+    visible = true
     title.value = todo.title
     description.value = todo.description
     priority.value = todo.priority
     thumbnail.value = todo.thumbnail
     content.value = todo.content
+    currentEditedTodoId = todo.id
 };
 
 onMounted(fetchTodos);
