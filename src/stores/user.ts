@@ -49,6 +49,11 @@ export const useUserStore = defineStore('user', {
       this.todos.push(todo);
       localStorage.setItem('todos', JSON.stringify(this.todos));
     },
+    editTodo(todo) {
+      var foundTodo = this.todos.find(obj => obj.id === todo.id);
+      Object.assign(foundTodo, todo);
+      localStorage.setItem('todos', JSON.stringify(this.todos));
+    },
     fetchTodos(userId) {
       return this.todos.filter(todo => todo.user_id === userId);
     },

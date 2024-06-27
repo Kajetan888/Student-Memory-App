@@ -13,7 +13,11 @@
           </div>
           <div class="input-group">
             <label for="description">Description</label>
-            <textarea id="description" v-model="description" required></textarea>
+            <textarea
+              id="description"
+              v-model="description"
+              required
+            ></textarea>
           </div>
           <div class="input-group">
             <label for="priority">Priority</label>
@@ -31,19 +35,34 @@
             <label for="content">Content</label>
             <textarea id="content" v-model="content" required></textarea>
           </div>
-          <button type="submit" class="add-button">Add To-Do</button>
+          <button type="submit" class="add-button">{{ addEditTodoButtonText }}</button>
+          <button v-if="visible" @click="resetEdit()" class="cancel-edit-button">Stop Edit Todo</button>
         </form>
       </section>
       <section class="note-list">
         <div v-for="todo in todos" :key="todo.id" class="todo-item">
-          <img :src="todo.thumbnail" alt="Thumbnail" v-if="todo.thumbnail" class="thumbnail" />
+          <img
+            :src="todo.thumbnail"
+            alt="Thumbnail"
+            v-if="todo.thumbnail"
+            class="thumbnail"
+          />
           <div class="todo-content">
             <h3>{{ todo.title }}</h3>
             <p>{{ todo.description }}</p>
-            <p>Priority: <span :class="todo.priority">{{ todo.priority }}</span></p>
-            <router-link :to="{ name: 'SingleNote', params: { id: todo.id } }" class="view-note">View Note</router-link>
+            <p>
+              Priority: <span :class="todo.priority">{{ todo.priority }}</span>
+            </p>
+            <router-link
+              :to="{ name: 'SingleNote', params: { id: todo.id } }"
+              class="view-note"
+              >View Note</router-link
+            >
           </div>
-          <button @click="deleteTodo(todo.id)" class="delete-button">Delete</button>
+          <button @click="editTodo(todo)" class="edit-button">Edit</button>
+          <button @click="deleteTodo(todo.id)" class="delete-button">
+            Delete
+          </button>
         </div>
       </section>
     </div>
@@ -51,8 +70,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useUserStore } from '../stores/user';
+import { ref, onMounted } from "vue";
+import { useUserStore } from "../stores/user";
 
 const quotes = [
   "The secret of getting ahead is getting started. - Mark Twain",
@@ -64,7 +83,7 @@ const quotes = [
   "The future belongs to those who believe in the beauty of their dreams. - Eleanor Roosevelt",
   "What you get by achieving your goals is not as important as what you become by achieving your goals. - Zig Ziglar",
   "The only way to do great work is to love what you do. - Steve Jobs",
-  "The harder you work for something, the greater you'll feel when you achieve it. - Anonymous"
+  "The harder you work for something, the greater you'll feel when you achieve it. - Anonymous",
 ];
 
 const getRandomQuote = () => {
@@ -73,13 +92,16 @@ const getRandomQuote = () => {
 
 const randomQuote = ref(getRandomQuote());
 
-const title = ref('');
-const description = ref('');
-const priority = ref('low');
+const title = ref("");
+const description = ref("");
+const priority = ref("low");
 const thumbnail = ref(null);
-const content = ref('');
+const content = ref("");
 const todos = ref([]);
 const userStore = useUserStore();
+var currentEditedTodoId = null
+var addEditTodoButtonText = "Add To-Do"
+var visible = false
 
 const handleFileUpload = (event) => {
   const file = event.target.files[0];
@@ -90,9 +112,20 @@ const handleFileUpload = (event) => {
   reader.readAsDataURL(file);
 };
 
+const resetEdit = () => {
+  title.value = "";
+  description.value = "";
+  priority.value = "low";
+  thumbnail.value = null;
+  content.value = "";
+  currentEditedTodoId = null
+  addEditTodoButtonText = "Add To-Do"
+  visible = false
+}
+
 const addTodo = () => {
   const newTodo = {
-    id: Date.now().toString(),
+    id: currentEditedTodoId != null ? currentEditedTodoId : Date.now().toString(),
     user_id: userStore.user.id,
     title: title.value,
     description: description.value,
@@ -100,13 +133,14 @@ const addTodo = () => {
     thumbnail: thumbnail.value,
     content: content.value,
   };
-  userStore.addTodo(newTodo);
-  todos.value.push(newTodo);
-  title.value = '';
-  description.value = '';
-  priority.value = 'low';
-  thumbnail.value = null;
-  content.value = '';
+  if (currentEditedTodoId != null){
+    userStore.editTodo(newTodo);
+  }
+  else {
+      userStore.addTodo(newTodo);
+      todos.value.push(newTodo);
+  }
+  resetEdit()
 };
 
 const fetchTodos = () => {
@@ -114,9 +148,20 @@ const fetchTodos = () => {
 };
 
 const deleteTodo = (id) => {
-  todos.value = todos.value.filter(todo => todo.id !== id);
-  userStore.todos = userStore.todos.filter(todo => todo.id !== id);
-  localStorage.setItem('todos', JSON.stringify(userStore.todos));
+  todos.value = todos.value.filter((todo) => todo.id !== id);
+  userStore.todos = userStore.todos.filter((todo) => todo.id !== id);
+  localStorage.setItem("todos", JSON.stringify(userStore.todos));
+};
+
+const editTodo = (todo) => {
+    addEditTodoButtonText = "Edit Todo"
+    visible = true
+    title.value = todo.title
+    description.value = todo.description
+    priority.value = todo.priority
+    thumbnail.value = todo.thumbnail
+    content.value = todo.content
+    currentEditedTodoId = todo.id
 };
 
 onMounted(fetchTodos);
@@ -179,7 +224,9 @@ label {
   color: #ddd;
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #444;
