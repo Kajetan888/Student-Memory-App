@@ -16,13 +16,24 @@
             <textarea id="description" v-model="description" required></textarea>
           </div>
           <div class="input-group">
-            <label for="priority">Priority</label>
-            <select id="priority" v-model="priority" required>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
+			<label>Priority</label>
+			<div class="priority-buttons">
+			<button type="button" 
+				:class="{ active: priority === 'low', low: true }" 
+				@click="priority = 'low'"
+			>Low</button>
+			<button 
+				type="button" 
+				:class="{ active: priority === 'medium', medium: true }" 
+				@click="priority = 'medium'"
+			>Medium</button>
+			<button 
+				type="button" 
+				:class="{ active: priority === 'high', high: true }" 
+				@click="priority = 'high'"
+			>High</button>
+			</div>
+			</div>
           <div class="input-group">
             <label for="thumbnail">Thumbnail</label>
             <input type="file" id="thumbnail" @change="handleFileUpload" />
@@ -288,5 +299,33 @@ button:hover {
 
 .delete-button:hover {
   background-color: darkred;
+}
+  .priority-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+.priority-buttons button {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.priority-buttons button.low {
+  background-color: green;
+}
+
+.priority-buttons button.medium {
+  background-color: #de9610;
+}
+
+.priority-buttons button.high {
+  background-color: #c4140e;
+}
+
+.priority-buttons button.active {
+  border: 2px solid white;
 }
 </style>
